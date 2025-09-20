@@ -1,0 +1,6 @@
+{
+    "file_scan_exclusions": [".DS_Store", "a1_spec.pdf"],
+    "file_types": {
+        "C": ["h"]
+    }
+}
