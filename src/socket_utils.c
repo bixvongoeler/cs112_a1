@@ -6,6 +6,9 @@ void error(char *msg)
 	exit(1);
 }
 
+// GET /index HTTP
+// GET http://www.example.com/index HTTP
+
 int connect_to_client(int listen_sockfd)
 {
 	/* Create Client Socket Struct */
