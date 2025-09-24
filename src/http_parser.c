@@ -192,3 +192,65 @@ void parse_host(char *host, HTTPRequest *req)
 		req->host[host_len] = '\0';
 	}
 }
+
+int parse_cache_control_max_age(const char *response)
+{
+	if (!response)
+		return HOUR_IN_SECONDS;
+
+	char *cache_control = strstr(response, "Cache-Control:");
+	if (!cache_control) {
+		cache_control = strstr(response, "cache-control:");
+	}
+
+	if (!cache_control)
+		return HOUR_IN_SECONDS;
+
+	char *max_age = strstr(cache_control, "max-age=");
+	if (!max_age)
+		return HOUR_IN_SECONDS;
+
+	char *line_end = strchr(max_age, '\r');
+	if (!line_end)
+		line_end = strchr(max_age, '\n');
+	if (!line_end)
+		return HOUR_IN_SECONDS;
+
+	int age = atoi(max_age + 8);
+	return age > 0 ? age : HOUR_IN_SECONDS;
+}
+
+char *inject_age_header(const char *response, size_t response_size,
+			uint64_t age_seconds, size_t *new_size)
+{
+	if (!response || !new_size)
+		return NULL;
+
+	char *blank_line = strstr(response, "\r\n\r\n");
+	if (!blank_line)
+		return NULL;
+
+	size_t header_end_pos = blank_line - response + 2;
+
+	char age_header[64];
+	snprintf(age_header, sizeof(age_header), "Age: %llu\r\n",
+		 (unsigned long long)age_seconds);
+
+	size_t age_header_len = strlen(age_header);
+	*new_size = response_size + age_header_len;
+
+	char *new_response = malloc(*new_size + 1);
+	if (!new_response)
+		return NULL;
+
+	memcpy(new_response, response, header_end_pos);
+
+	memcpy(new_response + header_end_pos, age_header, age_header_len);
+
+	memcpy(new_response + header_end_pos + age_header_len,
+	       response + header_end_pos, response_size - header_end_pos);
+
+	new_response[*new_size] = '\0';
+
+	return new_response;
+}

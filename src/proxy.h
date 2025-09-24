@@ -1,6 +1,6 @@
 #ifndef PROXY_H
 #define PROXY_H
-
+#include "cache.h"
 #include "http_parser.h"
 #include "socket_utils.h"
 

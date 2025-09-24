@@ -17,4 +17,8 @@ char *read_http_request(int client_sockfd, size_t *restrict_size);
 char *read_http_response(int server_sockfd, size_t *response_size);
 HTTPRequest parse_http_request(char *request_buffer);
 
+int parse_cache_control_max_age(const char *response);
+char *inject_age_header(const char *response, size_t response_size,
+			uint64_t age_seconds, size_t *new_size);
+
 #endif
