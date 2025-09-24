@@ -150,8 +150,31 @@ HTTPRequest parse_http_request(char *request_buffer)
 	}
 	parse_host(hostkey + 6, &req);
 
-	snprintf(req.full_url, sizeof(req.full_url), "http://%s:%d%s", req.host,
-		 req.port, req.path);
+	// Manual string construction for full_url
+	strcpy(req.full_url, "http://");
+	strcat(req.full_url, req.host);
+	strcat(req.full_url, ":");
+	// Convert port to string manually
+	char port_str[16];
+	int port = req.port;
+	int i = 0;
+	if (port == 0) {
+		port_str[i++] = '0';
+	} else {
+		char temp[16];
+		int temp_i = 0;
+		while (port > 0) {
+			temp[temp_i++] = '0' + (port % 10);
+			port /= 10;
+		}
+		// Reverse the digits
+		for (int j = temp_i - 1; j >= 0; j--) {
+			port_str[i++] = temp[j];
+		}
+	}
+	port_str[i] = '\0';
+	strcat(req.full_url, port_str);
+	strcat(req.full_url, req.path);
 
 	return req;
 }
@@ -233,8 +256,29 @@ char *inject_age_header(const char *response, size_t response_size,
 	size_t header_end_pos = blank_line - response + 2;
 
 	char age_header[64];
-	snprintf(age_header, sizeof(age_header), "Age: %llu\r\n",
-		 (unsigned long long)age_seconds);
+	// Manual string construction for age header
+	strcpy(age_header, "Age: ");
+	// Convert age_seconds to string manually
+	char age_str[32];
+	uint64_t age = age_seconds;
+	int i = 0;
+	if (age == 0) {
+		age_str[i++] = '0';
+	} else {
+		char temp[32];
+		int temp_i = 0;
+		while (age > 0) {
+			temp[temp_i++] = '0' + (age % 10);
+			age /= 10;
+		}
+		// Reverse the digits
+		for (int j = temp_i - 1; j >= 0; j--) {
+			age_str[i++] = temp[j];
+		}
+	}
+	age_str[i] = '\0';
+	strcat(age_header, age_str);
+	strcat(age_header, "\r\n");
 
 	size_t age_header_len = strlen(age_header);
 	*new_size = response_size + age_header_len;
